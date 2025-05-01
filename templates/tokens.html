@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>روابط لوحات التحكم</title>
+    <style>
+        body { font-family: Arial; direction: rtl; padding: 20px; background-color: #fff; }
+        a { display: block; font-size: 18px; margin-bottom: 10px; color: #333; text-decoration: none; }
+        a:hover { color: #007bff; }
+    </style>
+</head>
+<body>
+    <h2>🧳 روابط لوحات التحكم</h2>
+    {% if tokens %}
+        {% for token in tokens %}
+            <a href="{{ url_for('dashboard_info', token=token[0]) }}" target="_blank">رابط لوحة - {{ token[0] }}</a>
+        {% endfor %}
+    {% else %}
+        <p>🚫 لا توجد توكنات حالياً.</p>
+    {% endif %}
+</body>
+</html>
