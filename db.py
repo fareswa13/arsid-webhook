@@ -1,46 +1,39 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
-from db import create_table, insert_data, get_data_by_token
-import datetime
-import secrets
+import sqlite3
 
-app = Flask(__name__)
+DB_NAME = "webhook_data.db"
 
-# Create DB table if not exists
-create_table()
-
-@app.route('/webhook', methods=['POST'])
-def salla_webhook():
-    data = request.json
-    print(f"⚡️ Webhook Received at {datetime.datetime.now()}:")
-    print(data)
-
-    try:
-        merchant_id = str(data.get("merchant"))
-        token = secrets.token_hex(8)  # unique token for dashboard
-
-        insert_data(
-            merchant_id=merchant_id,
-            customer_name=str(data["data"].get("full_name", "")),
-            email=str(data["data"].get("email", "")),
-            timestamp=data.get("created_at"),
-            token=token
+def create_table():
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS salla_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            merchant_id TEXT,
+            customer_name TEXT,
+            email TEXT,
+            timestamp TEXT,
+            token TEXT
         )
-    except Exception as e:
-        print(f"❌ Error inserting data: {e}")
-        return jsonify({"status": "error"}), 500
+    """)
+    conn.commit()
+    conn.close()
 
-    return jsonify({"status": "received"}), 200
+def insert_data(merchant_id, customer_name, email, timestamp, token):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO salla_data (merchant_id, customer_name, email, timestamp, token)
+        VALUES (?, ?, ?, ?, ?)
+    """, (merchant_id, customer_name, email, timestamp, token))
+    conn.commit()
+    conn.close()
 
-@app.route('/')
-def home():
-    return redirect(url_for('dashboard_info'))
-
-@app.route('/dashboard/<token>')
-def dashboard_info(token):
-    rows = get_data_by_token(token)
-    if not rows:
-        return "⚠️ الرابط غير صالح أو لا توجد بيانات."
-    return render_template("dashboard.html", rows=rows)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+def get_data_by_token(token):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+        SELECT customer_name, email, timestamp FROM salla_data WHERE token=?
+    """, (token,))
+    rows = c.fetchall()
+    conn.close()
+    return rows
