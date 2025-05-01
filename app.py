@@ -2,10 +2,9 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for
 from db import create_table, insert_data, get_data_by_token
 import datetime
 import secrets
+import sqlite3
 
 app = Flask(__name__)
-
-# إنشاء الجدول عند التشغيل
 create_table()
 
 @app.route('/webhook', methods=['POST'])
@@ -21,7 +20,6 @@ def salla_webhook():
         timestamp = data.get("created_at")
         token = secrets.token_hex(8)
 
-        # بيانات المتابعة
         entry_time = str(data["data"].get("entry_time", ""))
         exit_time = str(data["data"].get("exit_time", ""))
         duration = str(data["data"].get("duration", ""))
@@ -29,16 +27,8 @@ def salla_webhook():
         city = str(data["data"].get("city", ""))
 
         insert_data(
-            merchant_id=merchant_id,
-            customer_name=customer_name,
-            email=email,
-            timestamp=timestamp,
-            token=token,
-            entry_time=entry_time,
-            exit_time=exit_time,
-            duration=duration,
-            country=country,
-            city=city
+            merchant_id, customer_name, email, timestamp, token,
+            entry_time, exit_time, duration, country, city
         )
     except Exception as e:
         print(f"❌ Error inserting data: {e}")
@@ -48,7 +38,7 @@ def salla_webhook():
 
 @app.route('/')
 def home():
-    return redirect(url_for('dashboard_info', token="demo"))  # مؤقتًا
+    return redirect(url_for('list_tokens'))
 
 @app.route('/dashboard/<token>')
 def dashboard_info(token):
@@ -66,17 +56,21 @@ def dashboard_info(token):
             entry_time, exit_time, duration = row[3], row[4], row[5]
 
         formatted_rows.append((
-            row[0],  # الاسم
-            row[1],  # الإيميل
-            row[2],  # التوقيت
-            entry_time,
-            exit_time,
-            duration,
-            row[6],  # الدولة
-            row[7]   # المدينة
+            row[0], row[1], row[2], entry_time, exit_time, duration, row[6], row[7], token
         ))
 
     return render_template("dashboard.html", rows=formatted_rows)
+
+@app.route('/tokens')
+def list_tokens():
+    conn = sqlite3.connect("webhook_data.db")
+    c = conn.cursor()
+    c.execute("SELECT DISTINCT token FROM salla_data")
+    tokens = c.fetchall()
+    conn.close()
+
+    links = [f"<li><a href='/dashboard/{t[0]}'>لوحة التاجر: {t[0]}</a></li>" for t in tokens]
+    return f"<h2>💼 روابط لوحات التحكم</h2><ul>{''.join(links)}</ul>"
 
 if __name__ == '__main__':
     app.run(debug=True)
