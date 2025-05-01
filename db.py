@@ -12,19 +12,26 @@ def create_table():
             customer_name TEXT,
             email TEXT,
             timestamp TEXT,
-            token TEXT
+            token TEXT,
+            entry_time TEXT,
+            exit_time TEXT,
+            duration TEXT,
+            country TEXT,
+            city TEXT
         )
     """)
     conn.commit()
     conn.close()
 
-def insert_data(merchant_id, customer_name, email, timestamp, token):
+def insert_data(merchant_id, customer_name, email, timestamp, token, entry_time, exit_time, duration, country, city):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("""
-        INSERT INTO salla_data (merchant_id, customer_name, email, timestamp, token)
-        VALUES (?, ?, ?, ?, ?)
-    """, (merchant_id, customer_name, email, timestamp, token))
+        INSERT INTO salla_data (
+            merchant_id, customer_name, email, timestamp, token,
+            entry_time, exit_time, duration, country, city
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (merchant_id, customer_name, email, timestamp, token, entry_time, exit_time, duration, country, city))
     conn.commit()
     conn.close()
 
@@ -32,7 +39,8 @@ def get_data_by_token(token):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("""
-        SELECT customer_name, email, timestamp FROM salla_data WHERE token=?
+        SELECT customer_name, email, timestamp, entry_time, exit_time, duration, country, city
+        FROM salla_data WHERE token=?
     """, (token,))
     rows = c.fetchall()
     conn.close()
