@@ -1,68 +1,97 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template_string
 import datetime
 import sqlite3
-import os
 
 app = Flask(__name__)
 
-# إنشاء قاعدة البيانات (أول مرة فقط)
+# ========== قاعدة البيانات ==========
 def init_db():
-    conn = sqlite3.connect('data.db')
+    conn = sqlite3.connect('webhook.db')
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS visitors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
-            phone TEXT,
-            email TEXT,
-            gender TEXT,
             city TEXT,
+            gender TEXT,
             age INTEGER,
-            event TEXT,
-            created_at TEXT
+            timestamp TEXT
         )
     ''')
     conn.commit()
     conn.close()
 
-# استدعاء إنشاء قاعدة البيانات
 init_db()
 
+# ========== استقبال Webhook ==========
 @app.route('/webhook', methods=['POST'])
 def salla_webhook():
     data = request.json
-    print(f"🔔 Webhook Received at {datetime.datetime.now()}:")
 
-    try:
-        customer = data.get("data", {})
-        name = customer.get("full_name", "")
-        phone = customer.get("mobile", "")
-        email = customer.get("email", "")
-        gender = customer.get("gender", "")
-        city = customer.get("city", "")
-        age = customer.get("age", None)
-        event = data.get("event", "")
-        created_at = datetime.datetime.now().isoformat()
+    name = data.get("full_name", "غير معروف")
+    city = data.get("city", "غير محددة")
+    gender = data.get("gender", "غير معروف")
+    age = data.get("age", 0)
 
-        conn = sqlite3.connect('data.db')
-        c = conn.cursor()
-        c.execute('''
-            INSERT INTO visitors (name, phone, email, gender, city, age, event, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (name, phone, email, gender, city, age, event, created_at))
-        conn.commit()
-        conn.close()
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        return jsonify({"status": "stored"}), 200
+    conn = sqlite3.connect('webhook.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO visitors (name, city, gender, age, timestamp) VALUES (?, ?, ?, ?, ?)",
+              (name, city, gender, age, timestamp))
+    conn.commit()
+    conn.close()
 
-    except Exception as e:
-        print("❌ Error:", str(e))
-        return jsonify({"status": "error", "message": str(e)}), 500
+    return jsonify({"status": "stored"}), 200
+
+# ========== صفحة عرض الزوار ==========
+@app.route('/dashboard')
+def dashboard():
+    conn = sqlite3.connect('webhook.db')
+    c = conn.cursor()
+    c.execute("SELECT name, city, gender, age, timestamp FROM visitors ORDER BY id DESC")
+    rows = c.fetchall()
+    conn.close()
+
+    html = '''
+    <html>
+    <head>
+        <title>لوحة الزوار</title>
+        <style>
+            body { font-family: Tahoma; direction: rtl; padding: 40px; background: #f5f5f5; }
+            table { width: 100%; border-collapse: collapse; background: white; }
+            th, td { padding: 12px; border: 1px solid #ccc; text-align: center; }
+            th { background: #333; color: white; }
+        </style>
+    </head>
+    <body>
+        <h2>📊 لوحة الزوار</h2>
+        <table>
+            <tr>
+                <th>الاسم</th>
+                <th>المدينة</th>
+                <th>النوع</th>
+                <th>العمر</th>
+                <th>وقت الدخول</th>
+            </tr>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ row[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+    </html>
+    '''
+    return render_template_string(html, rows=rows)
 
 @app.route('/')
 def home():
     return "Arsid Webhook is live ✅"
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
