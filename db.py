@@ -1,39 +1,46 @@
-import sqlite3
+from flask import Flask, request, jsonify, render_template, redirect, url_for
+from db import create_table, insert_data, get_data_by_token
+import datetime
+import secrets
 
-def create_connection():
-    conn = sqlite3.connect("webhook_data.db")
-    return conn
+app = Flask(__name__)
 
-def create_table():
-    conn = create_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS webhook_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            merchant_id TEXT,
-            customer_name TEXT,
-            email TEXT,
-            timestamp TEXT
+# Create DB table if not exists
+create_table()
+
+@app.route('/webhook', methods=['POST'])
+def salla_webhook():
+    data = request.json
+    print(f"⚡️ Webhook Received at {datetime.datetime.now()}:")
+    print(data)
+
+    try:
+        merchant_id = str(data.get("merchant"))
+        token = secrets.token_hex(8)  # unique token for dashboard
+
+        insert_data(
+            merchant_id=merchant_id,
+            customer_name=str(data["data"].get("full_name", "")),
+            email=str(data["data"].get("email", "")),
+            timestamp=data.get("created_at"),
+            token=token
         )
-    """)
-    conn.commit()
-    conn.close()
+    except Exception as e:
+        print(f"❌ Error inserting data: {e}")
+        return jsonify({"status": "error"}), 500
 
-def insert_data(merchant_id, customer_name, email, timestamp):
-    conn = create_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO webhook_data (merchant_id, customer_name, email, timestamp)
-        VALUES (?, ?, ?, ?)
-    """, (merchant_id, customer_name, email, timestamp))
-    conn.commit()
-    conn.close()
-import sqlite3
+    return jsonify({"status": "received"}), 200
 
-def get_all_data():
-    conn = sqlite3.connect('webhook_data.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM webhook_data')
-    rows = cursor.fetchall()
-    conn.close()
-    return rows
+@app.route('/')
+def home():
+    return redirect(url_for('dashboard_info'))
+
+@app.route('/dashboard/<token>')
+def dashboard_info(token):
+    rows = get_data_by_token(token)
+    if not rows:
+        return "⚠️ الرابط غير صالح أو لا توجد بيانات."
+    return render_template("dashboard.html", rows=rows)
+
+if __name__ == '__main__':
+    app.run(debug=True)
