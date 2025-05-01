@@ -28,3 +28,12 @@ def insert_data(merchant_id, customer_name, email, timestamp):
     """, (merchant_id, customer_name, email, timestamp))
     conn.commit()
     conn.close()
+import sqlite3
+
+def get_all_data():
+    conn = sqlite3.connect('webhook_data.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM webhook_data')
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
