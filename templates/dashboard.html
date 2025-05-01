@@ -16,28 +16,31 @@
   <h2>📊 لوحة بيانات الزوار</h2>
 
   {% if rows %}
-  <table>
-    <tr>
-      <th>الاسم</th>
-      <th>البريد الإلكتروني</th>
-      <th>وقت الدخول</th>
-      <th>وقت الخروج</th>
-      <th>مدة الجلسة</th>
-      <th>الدولة</th>
-      <th>المدينة</th>
-    </tr>
-    {% for row in rows %}
-    <tr>
-      <td>{{ row[0] }}</td>
-      <td>{{ row[1] }}</td>
-      <td>{{ row[2] }}</td>
-      <td>{{ row[3] }}</td>
-      <td>{{ row[4] }}</td>
-      <td>{{ row[5] }}</td>
-      <td>{{ row[6] }}</td>
-    </tr>
-    {% endfor %}
-  </table>
+<table>
+  <tr>
+    <th>الاسم</th>
+    <th>البريد الإلكتروني</th>
+    <th>تاريخ الإضافة</th>
+    <th>وقت الدخول</th>
+    <th>وقت الخروج</th>
+    <th>مدة الجلسة</th>
+    <th>الدولة</th>
+    <th>المدينة</th>
+  </tr>
+  {% for row in rows %}
+  <tr>
+    <td>{{ row[0] }}</td>
+    <td>{{ row[1] }}</td>
+    <td>{{ row[2] }}</td>
+    <td>{{ row[3] }}</td>
+    <td>{{ row[4] }}</td>
+    <td>{{ row[5] }}</td>
+    <td>{{ row[6] }}</td>
+    <td>{{ row[7] }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
   {% else %}
     <p>لا توجد بيانات حتى الآن.</p>
   {% endif %}
