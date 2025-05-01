@@ -23,7 +23,8 @@ def create_table():
     conn.commit()
     conn.close()
 
-def insert_data(merchant_id, customer_name, email, timestamp, token, entry_time, exit_time, duration, country, city):
+def insert_data(merchant_id, customer_name, email, timestamp, token,
+                entry_time, exit_time, duration, country, city):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("""
@@ -31,7 +32,8 @@ def insert_data(merchant_id, customer_name, email, timestamp, token, entry_time,
             merchant_id, customer_name, email, timestamp, token,
             entry_time, exit_time, duration, country, city
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (merchant_id, customer_name, email, timestamp, token, entry_time, exit_time, duration, country, city))
+    """, (merchant_id, customer_name, email, timestamp, token,
+          entry_time, exit_time, duration, country, city))
     conn.commit()
     conn.close()
 
@@ -45,3 +47,11 @@ def get_data_by_token(token):
     rows = c.fetchall()
     conn.close()
     return rows
+
+def get_all_tokens():
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT DISTINCT token FROM salla_data")
+    tokens = c.fetchall()
+    conn.close()
+    return tokens
