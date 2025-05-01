@@ -26,3 +26,10 @@ def salla_webhook():
 @app.route('/')
 def home():
     return "Arsid Webhook is live ✅"
+from db import get_all_data
+from flask import render_template  # تأكد أن هذا السطر موجود في الأعلى
+
+@app.route('/dashboard')
+def dashboard():
+    rows = get_all_data()
+    return render_template('dashboard.html', rows=rows)
