@@ -1,8 +1,7 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for
-from db import create_table, insert_data, get_data_by_token
+from db import create_table, insert_data, get_data_by_token, get_all_tokens
 import datetime
 import secrets
-import sqlite3
 
 app = Flask(__name__)
 create_table()
@@ -10,7 +9,7 @@ create_table()
 @app.route('/webhook', methods=['POST'])
 def salla_webhook():
     data = request.json
-    print(f"⚡️ Webhook Received at {datetime.datetime.now()}:")
+    print(f"⚡ Webhook Received at {datetime.datetime.now()}:")
     print(data)
 
     try:
@@ -30,6 +29,7 @@ def salla_webhook():
             merchant_id, customer_name, email, timestamp, token,
             entry_time, exit_time, duration, country, city
         )
+
     except Exception as e:
         print(f"❌ Error inserting data: {e}")
         return jsonify({"status": "error"}), 500
@@ -45,32 +45,12 @@ def dashboard_info(token):
     rows = get_data_by_token(token)
     if not rows:
         return "⚠️ الرابط غير صالح أو لا توجد بيانات."
-
-    formatted_rows = []
-    for row in rows:
-        try:
-            entry_time = datetime.datetime.strptime(row[3], "%Y-%m-%d %H:%M:%S").strftime("%I:%M %p")
-            exit_time = datetime.datetime.strptime(row[4], "%Y-%m-%d %H:%M:%S").strftime("%I:%M %p")
-            duration = str(round(float(row[5]), 2)) + " دقيقة"
-        except:
-            entry_time, exit_time, duration = row[3], row[4], row[5]
-
-        formatted_rows.append((
-            row[0], row[1], row[2], entry_time, exit_time, duration, row[6], row[7], token
-        ))
-
-    return render_template("dashboard.html", rows=formatted_rows)
+    return render_template("dashboard.html", rows=rows)
 
 @app.route('/tokens')
 def list_tokens():
-    conn = sqlite3.connect("webhook_data.db")
-    c = conn.cursor()
-    c.execute("SELECT DISTINCT token FROM salla_data")
-    tokens = c.fetchall()
-    conn.close()
-
-    links = [f"<li><a href='/dashboard/{t[0]}'>لوحة التاجر: {t[0]}</a></li>" for t in tokens]
-    return f"<h2>💼 روابط لوحات التحكم</h2><ul>{''.join(links)}</ul>"
+    tokens = get_all_tokens()
+    return render_template("tokens.html", tokens=tokens)
 
 if __name__ == '__main__':
     app.run(debug=True)
