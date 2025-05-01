@@ -1,49 +1,49 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <title>Arsid Webhook Dashboard</title>
-    <style>
-        body { font-family: Arial; direction: rtl; background-color: #f8f8f8; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-        th { background-color: #333; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        h2 { color: #444; }
-    </style>
+  <meta charset="UTF-8">
+  <title>لوحة بيانات العملاء</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; direction: rtl; background-color: #f9f9f9; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #222; color: #fff; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    h2 { color: #333; }
+  </style>
 </head>
 <body>
-    <h2>📊 لوحة بيانات العملاء</h2>
+  <h2>📊 لوحة التحكم لبيانات العملاء</h2>
 
-    {% if rows %}
-    <table>
-        <tr>
-            <th>الاسم</th>
-            <th>البريد الإلكتروني</th>
-            <th>تاريخ الإضافة</th>
-            <th>وقت الدخول</th>
-            <th>وقت الخروج</th>
-            <th>مدة الجلسة</th>
-            <th>الدولة</th>
-            <th>المدينة</th>
-            <th>المعرف</th>
-        </tr>
-        {% for row in rows %}
-        <tr>
-            <td>{{ row[0] }}</td>
-            <td>{{ row[1] }}</td>
-            <td>{{ row[2] }}</td>
-            <td>{{ row[3] }}</td>
-            <td>{{ row[4] }}</td>
-            <td>{{ row[5] }}</td>
-            <td>{{ row[6] }}</td>
-            <td>{{ row[7] }}</td>
-            <td>{{ row[8] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% else %}
-    <p>⚠️ لا توجد بيانات حالياً.</p>
-    {% endif %}
+  {% if rows %}
+  <table>
+    <tr>
+      <th>الاسم</th>
+      <th>الإيميل</th>
+      <th>تاريخ الإضافة</th>
+      <th>وقت الدخول</th>
+      <th>وقت الخروج</th>
+      <th>مدة الجلسة</th>
+      <th>الدولة</th>
+      <th>المدينة</th>
+      <th>Token</th>
+    </tr>
+    {% for row in rows %}
+    <tr>
+      <td>{{ row[0] }}</td>
+      <td>{{ row[1] }}</td>
+      <td>{{ row[2] }}</td>
+      <td>{{ row[3] }}</td>
+      <td>{{ row[4] }}</td>
+      <td>{{ row[5] }}</td>
+      <td>{{ row[6] }}</td>
+      <td>{{ row[7] }}</td>
+      <td>{{ row[8] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p>🚫 لا توجد بيانات حالياً.</p>
+  {% endif %}
 </body>
 </html>
